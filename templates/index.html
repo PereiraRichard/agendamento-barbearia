@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Barbearia</title>
+</head>
+
+<body>
+    <h1 id="titulo-servicos">Nossos Serviços</h1>
+    <ul id="lista-servicos"></ul>
+    <h2>Agendar Horário</h2>
+    <form id="form-agendamento">
+        <label>Serviço</label>
+        <select id="select-servico"></select>
+        <br><br>
+
+        <label>Data:</label>
+        <input type="date" id="input-data">
+        <br><br>
+
+        <button type="button" id="btn-buscar">Ver horários disponíveis</button>
+    </form>
+
+    <div id="horarios-disponiveis"></div>
+    <div id='mensagem'></div>
+
+    <script>
+        fetch('/servicos')
+            .then(resposta => resposta.json())
+            .then(servicos => {
+                const list = document.getElementById('lista-servicos');
+                servicos.forEach(servico => {
+                    const item = document.createElement('li');
+                    item.textContent = servico.nome + ' - R$ ' + servico.preco;
+                    list.appendChild(item);
+                });
+            });
+        fetch('/servicos')
+            .then(resposta => resposta.json())
+            .then(servicos => {
+                const select = document.getElementById('select-servico');
+                servicos.forEach(servico => {
+                    const opcao = document.createElement('option');
+                    opcao.value = servico.id;
+                    opcao.textContent = servico.nome;
+                    select.appendChild(opcao);
+                });
+            });
+
+        document.getElementById('btn-buscar').addEventListener('click', function () {
+            const servicoId = document.getElementById('select-servico').value;
+            const data = document.getElementById('input-data').value;
+
+            console.log('Serviço:', servicoId);
+            console.log('Data:', data);
+
+            const dias = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+            const partes = data.split('-');
+            const dataObjeto = new Date(partes[0], partes[1] - 1, partes[2]);
+            const numeroDoDia = dataObjeto.getDay();
+            const diaSemana = dias[numeroDoDia];
+            console.log('Dia da semana:', diaSemana);
+
+            function buscarHorarios() {
+                const url = '/disponibilidade?prestador_id=1&dia_semana=' + diaSemana + '&servico_id=' + servicoId + '&data=' + data;
+                console.log(url);
+                fetch(url)
+                    .then(resposta => resposta.json())
+                    .then(horarios => {
+                        console.log(horarios);
+                        const divHorarios = document.getElementById('horarios-disponiveis');
+                        divHorarios.innerHTML = '';
+                        horarios.forEach(horario => {
+                            const botao = document.createElement('button');
+                            botao.textContent = horario;
+                            botao.addEventListener('click', function () {
+                                fetch('/agendamentos', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        cliente_id: 1,
+                                        servico_id: servicoId,
+                                        data: data,
+                                        horas: horario
+                                    })
+                                })
+                                    .then(resposta => resposta.json())
+                                    .then(resultado => {
+                                        console.log(resultado);
+                                        document.getElementById('mensagem').textContent = 'Horario confirmado';
+                                        buscarHorarios();
+                                    });
+                            });
+                            divHorarios.appendChild(botao);
+                        });
+                    });
+            }
+
+            buscarHorarios();
+        });
+    </script>
+</body>
+
+</html>
