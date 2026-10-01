@@ -39,19 +39,25 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Rode o servidor:
+4. Crie os dados de exemplo (serviços, um barbeiro e horários de expediente de segunda a sábado):
+
+```
+python seed.py
+```
+
+5. Rode o servidor:
 
 ```
 python app.py
 ```
 
-5. Acesse `http://127.0.0.1:5000` no navegador.
+6. Acesse `http://127.0.0.1:5000` no navegador, escolha um serviço e uma data (de segunda a sábado) e veja os horários disponíveis.
 
-O banco começa vazio. Cadastre serviços, um prestador e os horários de expediente pela API (rotas `/servicos`, `/usuarios` e `/horarioDisponivel`, via POST).
+Se preferir, também é possível cadastrar serviços, usuários e horários de expediente manualmente pela API (rotas `/servicos`, `/usuarios` e `/horarioDisponivel`, via POST).
 
 ## Próximos passos
 
 - Tela de cadastro/login de cliente
 - Painel de administração para o prestador
 - Layout responsivo para celular
-- Senhas com hash e tratamento de dias sem expediente
+- Mensagem na tela quando não há horários disponíveis no dia
