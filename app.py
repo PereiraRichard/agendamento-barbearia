@@ -1,6 +1,7 @@
 from models import db, Servico, Usuario, HorarioDisponivel, Agendamento
 from flask import Flask, jsonify, request, render_template
 from datetime import datetime, timedelta, date
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -12,7 +13,7 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    return render_template('index.html')   
+    return render_template('index.html')
 
 @app.route('/servicos')
 def listar_servicos():
@@ -41,7 +42,12 @@ def listar_usuarios():
 @app.route('/usuarios', methods=['POST'])
 def criar_usuario():
     dados = request.get_json()
-    novo_usuario = Usuario(nome=dados['nome'], email=dados['email'], tipo=dados['tipo'], senha=dados['senha'])
+    novo_usuario = Usuario(
+        nome=dados['nome'],
+        email=dados['email'],
+        tipo=dados['tipo'],
+        senha=generate_password_hash(dados['senha'])
+    )
     db.session.add(novo_usuario)
     db.session.commit()
     return jsonify({'mensagem': 'Usuario criado com sucesso'})
@@ -110,6 +116,9 @@ def verificar_disponibilidade():
 
     expediente = HorarioDisponivel.query.filter_by(prestador_id=prestador_id, dia_semana=dia_semana).first()
     servico = Servico.query.get(servico_id)
+
+    if expediente is None or servico is None:
+        return jsonify([])
 
     duracao = timedelta(minutes=servico.duracao)
 
